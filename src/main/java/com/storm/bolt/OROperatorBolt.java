@@ -48,7 +48,7 @@ public class OROperatorBolt implements IRichBolt {
         	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(operand.getLtype())) {
         		 lvalue=(Boolean)operand.getLoperand();
         	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(operand.getLtype())) {
-        		 if("Cur".equalsIgnoreCase(operand.getLstate()) &&  !data.isEmpty() && data.containsKey(operand.getLoperand())) {
+        		 if(Constants.State.latest.name().equalsIgnoreCase(operand.getLstate()) &&  !data.isEmpty() && data.containsKey(operand.getLoperand())) {
         			 lvalue=(Boolean)data.get(operand.getLoperand());
         		 }else {
         			 String streamName=operatorMap.get(operand.getOperator());
@@ -62,7 +62,7 @@ public class OROperatorBolt implements IRichBolt {
         	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(operand.getRtype())) {
         		 rvalue=(Boolean)operand.getRoperand();
         	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(operand.getRtype())) {
-        		 if("Cur".equalsIgnoreCase(operand.getRstate()) &&  !data.isEmpty() && data.containsKey(operand.getRoperand())) {
+        		 if(Constants.State.latest.name().equalsIgnoreCase(operand.getRstate()) &&  !data.isEmpty() && data.containsKey(operand.getRoperand())) {
         			 rvalue=(Boolean)data.get(operand.getRoperand());
         		 }else {
         			 String streamName=operatorMap.get(operand.getOperator());
@@ -78,7 +78,7 @@ public class OROperatorBolt implements IRichBolt {
          if(lvalue==null)
         	 lvalue=(Boolean) resultstack.pop();
          
-         resultstack.push(lvalue && rvalue);
+         resultstack.push(lvalue || rvalue);
          stepnumber++;
          if(stepnumber<rule.getRuleSteps().size())
          collector.emit(operatorMap.get(rule.getRuleSteps().get(stepnumber).getOperator()),new Values(data,rule,stepnumber,resultstack));

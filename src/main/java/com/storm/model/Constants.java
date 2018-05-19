@@ -2,7 +2,7 @@ package com.storm.model;
 
 public class Constants {
 	public enum OperatorConstant {
-		and("and", "andstream"), or("or", "orstream"), gt("gt", "gtstream"), lt("lt", "ltstream");
+		and("and", "andstream"), or("or", "orstream"), gt("gt", "gtstream"), lt("lt", "ltstream"),add("add","addstream"),sub("sub","substream"),mul("mul","mulstream");
 
 		private String key;
 		private String value;
@@ -28,5 +28,9 @@ public class Constants {
 	
 	public enum Side{
 		Left,Right;
+	}
+	
+	public enum State{
+		latest,avg,max,min;
 	}
 }

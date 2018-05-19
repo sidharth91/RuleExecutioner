@@ -48,7 +48,7 @@ public class GTOperatorBolt implements IRichBolt {
         	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(operand.getLtype())) {
         		 lvalue=new Double(operand.getLoperand().toString());
         	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(operand.getLtype())) {
-        		 if("Cur".equalsIgnoreCase(operand.getLstate()) &&  !data.isEmpty() && data.containsKey(operand.getLoperand())) {
+        		 if(Constants.State.latest.name().equalsIgnoreCase(operand.getLstate()) &&  !data.isEmpty() && data.containsKey(operand.getLoperand())) {
         			 lvalue=new Double(data.get(operand.getLoperand()).toString());
         		 }else {
         			 String streamName=operatorMap.get(operand.getOperator());
@@ -62,7 +62,7 @@ public class GTOperatorBolt implements IRichBolt {
         	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(operand.getRtype())) {
         		 rvalue=new Double(operand.getRoperand().toString());
         	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(operand.getRtype())) {
-        		 if("Cur".equalsIgnoreCase(operand.getRstate()) &&  !data.isEmpty() && data.containsKey(operand.getRoperand())) {
+        		 if(Constants.State.latest.name().equalsIgnoreCase(operand.getRstate()) &&  !data.isEmpty() && data.containsKey(operand.getRoperand())) {
         			 rvalue=new Double(data.get(operand.getRoperand()).toString());
         		 }else {
         			 String streamName=operatorMap.get(operand.getOperator());
