@@ -2,7 +2,7 @@ package com.storm.model;
 
 public class Constants {
 	public enum OperatorConstant {
-		and("and", "andstream"), or("or", "orstream"), gt("gt", "gtstream"), lt("lt", "ltstream"),add("add","addstream"),sub("sub","substream"),mul("mul","mulstream");
+		and("&", "andstream"), or("|", "orstream"), gt(">", "gtstream"), lt("<", "ltstream"),add("+","addstream"),sub("-","substream"),mul("*","mulstream"),in("in","instream");
 
 		private String key;
 		private String value;

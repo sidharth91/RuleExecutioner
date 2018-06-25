@@ -32,7 +32,8 @@ public class ResultBolt implements IRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
-		System.out.println(tuple);	 
+		Rule rule=(Rule) tuple.getValueByField("data");
+		System.out.println(rule.getStack().peekFirst().toString());	 
          
 		collector.ack(tuple);
 		

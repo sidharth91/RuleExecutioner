@@ -25,6 +25,7 @@ public class CollectDataBolt implements IRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {//kafkaTuple contain  fields "topic", "partition", "offset", "key", "value".
+		
 		ObjectMapper mapper=new ObjectMapper();
 		SourceData sourceData=null;
 		try {
@@ -36,7 +37,6 @@ public class CollectDataBolt implements IRichBolt {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			collector.ack(tuple);
 		}
 	    finally {
 	    	collector.ack(tuple);	

@@ -33,59 +33,60 @@ public class OROperatorBolt implements IRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
-		Rule rule=(Rule) tuple.getValueByField("rule");
-		Integer stepnumber=tuple.getIntegerByField("stepnumber");
-		Stack<Object> resultstack=(Stack<Object>) tuple.getValueByField("resultstack");
-		 Map<String,Object> data=(Map<String, Object>) tuple.getValueByField("data");
+		
+		try {
+		Rule rule=(Rule) tuple.getValueByField("data");
 		 
 		 Boolean lvalue=null;
 		 Boolean rvalue=null;
 		
 
-		
-         RuleExecutionStep operand=(RuleExecutionStep) rule.getRuleSteps().get(tuple.getIntegerByField("stepnumber"));
-         if(operand.getLoperand()!=null) {  
-        	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(operand.getLtype())) {
-        		 lvalue=(Boolean)operand.getLoperand();
-        	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(operand.getLtype())) {
-        		 if(Constants.State.latest.name().equalsIgnoreCase(operand.getLstate()) &&  !data.isEmpty() && data.containsKey(operand.getLoperand())) {
-        			 lvalue=(Boolean)data.get(operand.getLoperand());
+         if(rule.getRuleSteps().get(rule.getStepNumber()).getLoperand()!=null) {  
+        	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getLtype())) {
+        		 lvalue=(Boolean)rule.getRuleSteps().get(rule.getStepNumber()).getLoperand();
+        	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getLtype())) {
+        		 if(Constants.State.latest.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getLstate()) &&  !rule.getData().isEmpty() && rule.getData().containsKey(rule.getRuleSteps().get(rule.getStepNumber()).getLoperand())) {
+        			 lvalue=(Boolean)rule.getData().get(rule.getRuleSteps().get(rule.getStepNumber()).getLoperand());
         		 }else {
-        			 String streamName=operatorMap.get(operand.getOperator());
-          			collector.emit("redisvaluefinderstream",new Values(data,rule,stepnumber,resultstack,streamName,Constants.Side.Left.name()));
+        			 String streamName=operatorMap.get(rule.getRuleSteps().get(rule.getStepNumber()).getOperator());
+          			collector.emit("redisvaluefinderstream",new Values(rule,streamName,Constants.Side.Left.name()));
           			return;
         		 }
         	 }
         
          }
-         if(operand.getRoperand()!=null) {  
-        	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(operand.getRtype())) {
-        		 rvalue=(Boolean)operand.getRoperand();
-        	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(operand.getRtype())) {
-        		 if(Constants.State.latest.name().equalsIgnoreCase(operand.getRstate()) &&  !data.isEmpty() && data.containsKey(operand.getRoperand())) {
-        			 rvalue=(Boolean)data.get(operand.getRoperand());
+         if(rule.getRuleSteps().get(rule.getStepNumber()).getRoperand()!=null) {  
+        	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getRtype())) {
+        		 rvalue=(Boolean)rule.getRuleSteps().get(rule.getStepNumber()).getRoperand();
+        	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getRtype())) {
+        		 if(Constants.State.latest.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getRstate()) &&  !rule.getData().isEmpty() && rule.getData().containsKey(rule.getRuleSteps().get(rule.getStepNumber()).getRoperand())) {
+        			 rvalue=(Boolean)rule.getData().get(rule.getRuleSteps().get(rule.getStepNumber()).getRoperand());
         		 }else {
-        			 String streamName=operatorMap.get(operand.getOperator());
-          			collector.emit("redisvaluefinderstream",new Values(data,rule,stepnumber,resultstack,streamName,Constants.Side.Right.name()));
+        			 String streamName=operatorMap.get(rule.getRuleSteps().get(rule.getStepNumber()).getOperator());
+          			collector.emit("redisvaluefinderstream",new Values(rule,streamName,Constants.Side.Right.name()));
           			return;
         		 }
-        		 
         	 }
+        
          }
        
          if(rvalue==null)
-        	 rvalue=(Boolean)resultstack.pop();
+        	 rvalue=(Boolean)rule.getStack().removeFirst();
          if(lvalue==null)
-        	 lvalue=(Boolean) resultstack.pop();
+        	 lvalue=(Boolean) rule.getStack().removeFirst();
          
-         resultstack.push(lvalue || rvalue);
-         stepnumber++;
-         if(stepnumber<rule.getRuleSteps().size())
-         collector.emit(operatorMap.get(rule.getRuleSteps().get(stepnumber).getOperator()),new Values(data,rule,stepnumber,resultstack));
+         rule.getStack().addFirst(lvalue || rvalue);
+         
+          rule.setStepNumber(rule.getStepNumber()+1);
+         if(rule.getStepNumber()<rule.getRuleSteps().size())
+         collector.emit(operatorMap.get(rule.getRuleSteps().get(rule.getStepNumber()).getOperator()),new Values(rule));
          else
-        collector.emit("resultstream",new Values(data,rule,stepnumber,resultstack));	 
-         
-		collector.ack(tuple);
+        collector.emit("resultstream",new Values(rule));	 
+		}catch(Exception e) {
+			System.out.println(e.getMessage());
+		}finally {
+			collector.ack(tuple);
+		}
 		
 	}
 
@@ -100,10 +101,10 @@ public class OROperatorBolt implements IRichBolt {
 		Map<String,String> streammap=Arrays.asList(Constants.OperatorConstant.values()).stream().collect(
                 Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
 		streammap.forEach((k,v)->
-			declarer.declareStream(v,new Fields("data","rule","stepnumber","resultstack")));
+			declarer.declareStream(v,new Fields("data")));
 		
-		declarer.declareStream("resultstream",new Fields("data","rule","stepnumber","resultstack"));
-		declarer.declareStream("redisvaluefinderstream",new Fields("data","rule","stepnumber","resultstack","streamname","side"));
+		declarer.declareStream("resultstream",new Fields("data"));
+		declarer.declareStream("redisvaluefinderstream",new Fields("data","streamname","side"));
 	}
 
 	@Override

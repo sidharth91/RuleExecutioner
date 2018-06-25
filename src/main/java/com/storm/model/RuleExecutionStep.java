@@ -8,6 +8,8 @@ private String ltype;
 private String rtype;
 private String lstate;
 private String rstate;
+
+
 public Object getLoperand() {
 	return loperand;
 }

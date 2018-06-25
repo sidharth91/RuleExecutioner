@@ -1,6 +1,8 @@
 package com.storm.bolt;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -17,7 +19,7 @@ import com.storm.model.Constants;
 import com.storm.model.Rule;
 import com.storm.model.RuleExecutionStep;
 
-public class LTOperatorBolt implements IRichBolt {
+public class INOperatorBolt implements IRichBolt {
 
 	private OutputCollector collector;
 	private Map<String,String> operatorMap;
@@ -37,16 +39,16 @@ public class LTOperatorBolt implements IRichBolt {
 		try {
 		Rule rule=(Rule) tuple.getValueByField("data");
 		 
-		 Double lvalue=null;
-		 Double rvalue=null;
+		 String lvalue=new String();
+		 List<String> rvalue=new ArrayList<>();
 		
 
          if(rule.getRuleSteps().get(rule.getStepNumber()).getLoperand()!=null) {  
         	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getLtype())) {
-        		 lvalue=new Double(rule.getRuleSteps().get(rule.getStepNumber()).getLoperand().toString());
+        		 lvalue=rule.getRuleSteps().get(rule.getStepNumber()).getLoperand().toString();
         	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getLtype())) {
         		 if(Constants.State.latest.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getLstate()) &&  !rule.getData().isEmpty() && rule.getData().containsKey(rule.getRuleSteps().get(rule.getStepNumber()).getLoperand())) {
-        			 lvalue=new Double(rule.getData().get(rule.getRuleSteps().get(rule.getStepNumber()).getLoperand()).toString());
+        			 lvalue=rule.getData().get(rule.getRuleSteps().get(rule.getStepNumber()).getLoperand()).toString();
         		 }else {
         			 String streamName=operatorMap.get(rule.getRuleSteps().get(rule.getStepNumber()).getOperator());
           			collector.emit("redisvaluefinderstream",new Values(rule,streamName,Constants.Side.Left.name()));
@@ -57,10 +59,10 @@ public class LTOperatorBolt implements IRichBolt {
          }
          if(rule.getRuleSteps().get(rule.getStepNumber()).getRoperand()!=null) {  
         	 if(Constants.ValueType.Constant.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getRtype())) {
-        		 rvalue=new Double(rule.getRuleSteps().get(rule.getStepNumber()).getRoperand().toString());
+        		 rvalue=Arrays.asList(rule.getRuleSteps().get(rule.getStepNumber()).getRoperand().toString().split(","));
         	 }if(Constants.ValueType.Variable.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getRtype())) {
         		 if(Constants.State.latest.name().equalsIgnoreCase(rule.getRuleSteps().get(rule.getStepNumber()).getRstate()) &&  !rule.getData().isEmpty() && rule.getData().containsKey(rule.getRuleSteps().get(rule.getStepNumber()).getRoperand())) {
-        			 rvalue=new Double(rule.getData().get(rule.getRuleSteps().get(rule.getStepNumber()).getRoperand()).toString());
+        			 rvalue=Arrays.asList(rule.getData().get(rule.getRuleSteps().get(rule.getStepNumber()).getRoperand()).toString().split(","));
         		 }else {
         			 String streamName=operatorMap.get(rule.getRuleSteps().get(rule.getStepNumber()).getOperator());
           			collector.emit("redisvaluefinderstream",new Values(rule,streamName,Constants.Side.Right.name()));
@@ -70,12 +72,13 @@ public class LTOperatorBolt implements IRichBolt {
         
          }
        
-         if(rvalue==null)
-        	 rvalue=new Double(rule.getStack().removeFirst().toString());
-         if(lvalue==null)
-        	 lvalue=new Double( rule.getStack().removeFirst().toString());
+         if(rvalue.isEmpty())
+        	 rvalue=Arrays.asList(rule.getStack().removeFirst().toString().split(","));
+         if(lvalue.isEmpty())
+        	 lvalue=rule.getStack().removeFirst().toString();
          
-         rule.getStack().addFirst(lvalue < rvalue);
+         
+         rule.getStack().addFirst(rvalue.contains(lvalue));
          
           rule.setStepNumber(rule.getStepNumber()+1);
          if(rule.getStepNumber()<rule.getRuleSteps().size())
