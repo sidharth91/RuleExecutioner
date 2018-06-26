@@ -1,69 +1,23 @@
 # RuleExecutioner
 Rule Execution Using Apache storm ,Apache kafka, Redis
-1.Run the RuleGenerator by giving a rule json string like:
+1.Run the RuleGenerator by giving a rule  string like:
+	((34567:Variable:latest > 30)&(34567:Variable:latest>12345:Variable:avg))
 	
-	{
-	"operator": "and",
-	"loperand": {
-		"operator": "gt",
-		"loperand": {
-			"operator": "add",
-			"loperand": {
-				"value": "R13",
-				"state": "avg",
-				"type": "Variable"
-			},
-			"roperand": {
-				"value": "R14",
-				"state": "avg",
-				"type": "Variable"
-			}
-		},
-		"roperand": {
-			"operator": "mul",
-			"loperand": {
-				"value": 15,
-				"state": "",
-				"type": "Constant"
-			},
-			"roperand": {
-				"value": 9,
-				"state": "",
-				"type": "Constant"
-			}
-		}
-	},
-	"roperand": {
-		"operator": "or",
-		"loperand": {
-			"operator": "gt",
-			"loperand": {
-				"value": "R13",
-				"state": "latest",
-				"type": "Variable"
-			},
-			"roperand": {
-				"value": "R14",
-				"state": "avg",
-				"type": "Variable"
-			}
-		},
-		"roperand": {
-			"operator": "lt",
-			"loperand": {
-				"value": "R13",
-				"state": "latest",
-				"type": "Variable"
-			},
-			"roperand": {
-				"value": "R13",
-				"state": "max",
-				"type": "Variable"
-			}
-		}
-	}
-}
-
+2.redis db push some data if we are going to use avg max and min for checking
+	redis 127.0.0.1:6379> hgetall 12345
+							1) "avg"
+							2) "38"
+                            3) "max"
+							4) "43"
+							5) "min"
+							6) "41"
+							redis 127.0.0.1:6379> hgetall 23456
+							1) "avg"
+							2) "4"
+							3) "min"
+							4) "2"
+							5) "max"
+							6) "6"
 json contain : {"operator": "and","loperand": {},"roperand": {}}
 
 operand have four value 
@@ -74,66 +28,32 @@ operand have four value
 				operator->it contain the operator as string it may not present if this is the end of tree operand
 				
 this operation will convert the json string and store in redisdb its like creating a rule in a ruleset and it create a rule in redisdb
-{
-	"ruleId": "Rule1",
-	"ruleSteps": [{
-		"operator": "add",
-		"loperand": "R13",
-		"roperand": "R14",
-		"ltype": "Variable",
-		"rtype": "Variable",
-		"lstate": "avg",
-		"rstate": "avg"
-	}, {
-		"operator": "mul",
-		"loperand": 15,
-		"roperand": 9,
-		"ltype": "Constant",
-		"rtype": "Constant",
-		"lstate": "",
-		"rstate": ""
-	}, {
-		"operator": "gt",
-		"loperand": null,
-		"roperand": null,
-		"ltype": null,
-		"rtype": null,
-		"lstate": null,
-		"rstate": null
-	}, {
-		"operator": "gt",
-		"loperand": "R13",
-		"roperand": "R14",
-		"ltype": "Variable",
-		"rtype": "Variable",
-		"lstate": "latest",
-		"rstate": "avg"
-	}, {
-		"operator": "lt",
-		"loperand": "R13",
-		"roperand": "R13",
-		"ltype": "Variable",
-		"rtype": "Variable",
-		"lstate": "latest",
-		"rstate": "max"
-	}, {
-		"operator": "or",
-		"loperand": null,
-		"roperand": null,
-		"ltype": null,
-		"rtype": null,
-		"lstate": null,
-		"rstate": null
-	}, {
-		"operator": "and",
-		"loperand": null,
-		"roperand": null,
-		"ltype": null,
-		"rtype": null,
-		"lstate": null,
-		"rstate": null
-	}]
-}	
+{{
+  "ruleId": "Rule1",
+  "ruleSteps": [
+    {
+      "operator": ">=",
+      "loperand": "34567",
+      "roperand": "38",
+      "ltype": "Variable",
+      "rtype": "Constant",
+      "lstate": "latest",
+      "rstate": "latest"
+    },
+    {
+      "operator": "<=",
+      "loperand": "34567",
+      "roperand": "12345",
+      "ltype": "Variable",
+      "rtype": "Variable",
+      "lstate": "latest",
+      "rstate": "avg"
+    },
+    {
+      "operator": "&"
+    }
+  ]
+}
 
-when ever data comes from kafka this {"data":{"R13":40,"R14":13},ruleIds:["rule:set1"]}	
+when ever data comes from kafka this {"data":{"34567":40,"56789":"test"},"ruleIds":["rule:set1"]}
 application will execute the rule set with multiple rules in it and show true or false value for that each rule		
