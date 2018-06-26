@@ -33,7 +33,7 @@ public class RuleGenerator {
 		
 		//String s="((34567:Variable:latest > 30)&(34567:Variable:latest>12345:Variable:avg))|(23456:Variable:avg>5)";//space separated string between operand and operator
 		
-		String s="((34567:Variable:latest > 30)&(34567:Variable:latest>12345:Variable:avg))";//space separated string between operand and operator
+		String s="((34567:Variable:latest >= 38)&(34567:Variable:latest<=12345:Variable:avg))";//space separated string between operand and operator
 		
 		Map<String,String> operators=Arrays.asList(OperatorPriority.values()).stream().collect(Collectors.toMap(OperatorPriority::getOperator,OperatorPriority::getRegex));
 		
